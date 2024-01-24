@@ -1,5 +1,7 @@
 using Hotels.WebAPI.Data;
 using Hotels.WebAPI.Models;
+using Hotels.WebAPI.Services.Repository;
+using Hotels.WebAPI.Interfaces.Repository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +10,7 @@ builder.Services.AddDbContext<HotelDbContext>(options =>
 {
     options.UseSqlite(builder.Configuration.GetConnectionString("Sqlite"));
 });
+builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 
 WebApplication app = builder.Build();
 if (app.Environment.IsDevelopment())
@@ -17,50 +20,35 @@ if (app.Environment.IsDevelopment())
     dbContext.Database.EnsureCreated();
 }
 
-#region API's
+app.MapGet("/hotels", async (IHotelRepository repository) =>
+    Results.Ok(await repository.GetHotelsAsync()));
 
-app.MapGet("/hotels", async (HotelDbContext dbContext) => await dbContext.Hotels.ToListAsync());
-app.MapGet("/hotels/{id}", async (int id, HotelDbContext dbContext) =>
+app.MapGet("/hotels/{id}", async (int id, IHotelRepository repository) =>
 {
-    Hotel? hotel = await dbContext.Hotels.FirstOrDefaultAsync(h => h.Id == id);
+    Hotel? hotel = await repository.GetHotelAsync(id);
     return hotel == null ? Results.NotFound() : Results.Ok(hotel); 
 });
-app.MapPost("/hotels/create/", async ([FromBody] Hotel hotel, HotelDbContext dbContext, HttpResponse response) =>
-{
-    dbContext.Hotels.Add(hotel);
 
-    await dbContext.SaveChangesAsync();
+app.MapPost("/hotels/create/", async ([FromBody] Hotel hotel, IHotelRepository repository) =>
+{
+    await repository.InsertHotelAsync(hotel);
+    await repository.SaveAsync();
+
     return Results.Created($"/hotels/{hotel.Id}", hotel);
 });
-app.MapPut("/hotels/edit/", async ([FromBody] Hotel hotel, HotelDbContext dbContext) =>
+
+app.MapPut("/hotels/edit/", async ([FromBody] Hotel hotel, IHotelRepository repository) =>
 {
-    Hotel? hotelFromDb = await dbContext.Hotels.FindAsync(new object[] { hotel.Id });
-
-    if (hotelFromDb == null)
-        return Results.NotFound();
-
-    hotelFromDb.Name = hotel.Name;
-    hotelFromDb.Latitude = hotel.Latitude;
-    hotelFromDb.Longitude = hotel.Longitude;
-
-    await dbContext.SaveChangesAsync();
+    await repository.UpdateHotelAsync(hotel);
+    await repository.SaveAsync();
     return Results.NoContent();
 });
-app.MapDelete("hotels/{id}", async (int id, HotelDbContext dbContext) =>
+app.MapDelete("hotels/{id}", async (int id, IHotelRepository repository) =>
 {
-    Hotel? hotelFromDb = await dbContext.Hotels.FindAsync(new object[] { id });
-
-    if (hotelFromDb == null)
-        return Results.NotFound();
-
-    dbContext.Hotels.Remove(hotelFromDb);
-
-    await dbContext.SaveChangesAsync();
+    await repository.DeleteHotelAsync(id);
+    await repository.SaveAsync();
     return Results.NoContent();
 });
-
-#endregion
 
 app.UseHttpsRedirection();
-
 app.Run();
