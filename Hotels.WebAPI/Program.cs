@@ -1,7 +1,9 @@
 using Hotels.WebAPI.Data;
 using Hotels.WebAPI.Models;
+using Hotels.WebAPI.Utils.Extensions;
 using Hotels.WebAPI.Services.Repository;
 using Hotels.WebAPI.Interfaces.Repository;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,7 +30,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapGet("/hotels", async (IHotelRepository repository) =>
-    Results.Ok(await repository.GetHotelsAsync()))
+    Results.Extensions.Xml(await repository.GetHotelsAsync()))
     .Produces<List<Hotel>>(StatusCodes.Status200OK)
     .WithName("GetAllHotels")
     .WithTags("Getters");
@@ -40,7 +42,18 @@ app.MapGet("/hotels/search/name/{query}",
             : Results.NotFound(Array.Empty<Hotel>()))
     .Produces<List<Hotel>>(StatusCodes.Status200OK)
     .Produces(StatusCodes.Status404NotFound)
-    .WithName("SearchHotels")
+    .WithName("SearchHotelsByName")
+    .WithTags("Getters")
+    .ExcludeFromDescription();
+
+app.MapGet("/hotels/search/location/{coordinate}",
+    async (Coordinate coordinate, IHotelRepository repository) =>
+        await repository.GetHotelsAsync(coordinate) is IEnumerable<Hotel> hotels
+            ? Results.Ok(hotels)
+            : Results.NotFound(Array.Empty<Hotel>()))
+    .Produces<List<Hotel>>(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status404NotFound)
+    .WithName("SearchHotelsByLocation")
     .WithTags("Getters")
     .ExcludeFromDescription();
 
