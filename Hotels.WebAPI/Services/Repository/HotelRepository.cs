@@ -13,6 +13,9 @@ public class HotelRepository(HotelDbContext dbContext) : IHotelRepository
     public Task<List<Hotel>> GetHotelsAsync() =>
         _dbContext.Hotels.ToListAsync();
 
+    public Task<List<Hotel>> GetHotelsAsync(string name) =>
+        _dbContext.Hotels.Where(h => h.Name.Contains(name)).ToListAsync();
+
     public async Task<Hotel?> GetHotelAsync(int hotelId) =>
         await _dbContext.Hotels.FindAsync(new object[] { hotelId });
 
