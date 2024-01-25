@@ -8,6 +8,8 @@ public interface IHotelRepository
 
     public Task<List<Hotel>> GetHotelsAsync(string name);
 
+    public Task<List<Hotel>> GetHotelsAsync(Coordinate coordinate);
+
     public Task<Hotel?> GetHotelAsync(int hotelId);
 
     public Task InsertHotelAsync(Hotel hotel);
