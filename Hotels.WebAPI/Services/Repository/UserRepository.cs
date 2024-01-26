@@ -9,7 +9,6 @@ public class UserRepository : IUserRepository
     [
         new User() { Name = "Admin", Password = "Admin" },
         new User() { Name = "Monica", Password = "123" },
-        new User() { Name = "Nancy", Password = "123" }
     ];
 
     public User? GetUser(string name) =>
