@@ -25,14 +25,14 @@ public class HotelRepository(HotelDbContext dbContext) : IHotelRepository
         ).ToListAsync();
 
     public async Task<Hotel?> GetHotelAsync(int hotelId) =>
-        await _dbContext.Hotels.FindAsync(new object[] { hotelId });
+        await _dbContext.Hotels.FindAsync([hotelId]);
 
     public async Task InsertHotelAsync(Hotel hotel) =>
         await _dbContext.Hotels.AddAsync(hotel);
 
     public async Task UpdateHotelAsync(Hotel hotel)
     {
-        Hotel? hotelFromDb = await _dbContext.Hotels.FindAsync(new object[] { hotel.Id });
+        Hotel? hotelFromDb = await _dbContext.Hotels.FindAsync([hotel.Id]);
 
         if (hotelFromDb != null)
         {
@@ -44,7 +44,7 @@ public class HotelRepository(HotelDbContext dbContext) : IHotelRepository
 
     public async Task DeleteHotelAsync(int hotelId)
     {
-        Hotel? hotelFromDb = await _dbContext.Hotels.FindAsync(new object[] { hotelId });
+        Hotel? hotelFromDb = await _dbContext.Hotels.FindAsync([hotelId]);
 
         if (hotelFromDb != null)
             _dbContext.Hotels.Remove(hotelFromDb);
